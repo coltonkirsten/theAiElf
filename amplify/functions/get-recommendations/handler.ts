@@ -1,5 +1,5 @@
 import type { Schema } from "../../data/resource"
-import OpenAI from "openai"
+import OpenAI from "@openai"
 
 const openai = new OpenAI()
 
