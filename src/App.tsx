@@ -1,37 +1,43 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
 
 const client = generateClient<Schema>();
 
 function App() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const [name, setName] = useState("");
+  const [recommendations, setRecommendations] = useState<string | null>(null);
 
-  useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
-    });
-  }, []);
-
-  function createTodo() {
-    client.models.Todo.create({ content: window.prompt("Todo content") });
-  }
+  const fetchRecommendations = async () => {
+    try {
+      const result = await client.queries.getrec({
+        name: name,
+      });
+      setRecommendations(JSON.stringify(result)); // Set the recommendations to display
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+      setRecommendations("Failed to fetch recommendations." + error);
+    }
+  };
 
   return (
     <main>
-      <h1>My todos</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
+      <h1>Get Recommendations from Lambda</h1>
       <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
+        <input
+          type="text"
+          placeholder="Enter name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <button onClick={fetchRecommendations}>Get Recommendations</button>
+      </div>
+      <div>
+        <h2>Result:</h2>
+        <pre>{recommendations || "No recommendations yet"}</pre>
+      </div>
+      <div>
+        <img src="/elfie.png" alt="Recommendation Image" />
       </div>
     </main>
   );
